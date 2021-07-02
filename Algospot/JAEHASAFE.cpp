@@ -82,10 +82,20 @@ int solve() {
 	int result = 0;
 
 	for (int i = 1; i < K + 1; i++) {
-		int dir = (i % 2 == 0); // 0: counter clockwise, 1: clockwise
+		int dir = (i % 2 == 1); // 1: shift clockwise, 0: shift cclockwise
 
+		/*
 		N = build_N(dials[i - 1], dir);
-		M = build_M(dials[i], dir);
+		M = build_M(dials[i], dir); */
+
+		if (dir == 1) {
+			N = dials[i] + dials[i];
+			M = dials[i - 1];
+		}
+		else {
+			N = dials[i - 1] + dials[i - 1];
+			M = dials[i];
+		}
 
 		calculate();
 		result += KMP();
