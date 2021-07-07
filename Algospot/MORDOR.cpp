@@ -2,80 +2,82 @@
 #include <vector>
 using namespace std;
 
-typedef struct _RN {
-	int mn;
-	int mx;
-} RN;
+struct RPQ {
+	int n;
+	int INF = 30000, NINF = -1;
+	vector<pair<int, int>> rangePair;
+
+	RPQ(const vector<int>& array) {
+		n = array.size();
+		rangePair.resize(4 * n);
+		init(array, 0, n - 1, 1);
+	}
+
+	pair<int, int> merge(const pair<int, int>& a, const pair<int, int>& b) {
+		pair<int, int> result;
+
+		if (a.first <= b.first) { result.first = a.first; }
+		else { result.first = b.first; }
+		if (a.second >= b.second) { result.second = a.second; }
+		else { result.second = b.second; }
+
+		return result;
+	}
+
+	pair<int, int> init(const vector<int>& array, int left, int right, int node) {
+		if (left == right) {
+			rangePair[node].first = array[left];
+			rangePair[node].second = array[left];
+			return pair<int, int>(array[left], array[right]);
+		}
+
+		int mid = (left + right) / 2;
+		pair<int, int> p1 = init(array, left, mid, node * 2);
+		pair<int, int> p2 = init(array, mid + 1, right, node * 2 + 1);
+
+		rangePair[node] = merge(p1, p2);
+
+		return rangePair[node];
+	}
+
+	pair<int, int> query(int left, int right, int node, int nleft, int nright) {
+		// cout << left << " " << right << " " << node << " " << nleft << " " << nright << endl;
+
+		if ((right < nleft) || (nright < left)) {
+			return pair<int, int>(INF, NINF);
+		}
+		else if ((left <= nleft) && (nright <= right)) {
+			return rangePair[node];
+		}
+
+		int mid = (nleft + nright) / 2;
+		pair<int, int> p1 = query(left, right, node * 2, nleft, mid);
+		pair<int, int> p2 = query(left, right, node * 2 + 1, mid + 1, nright);
+
+		return merge(p1, p2);
+	}
+
+	pair<int, int> query(int left, int right) {
+		return query(left, right, 1, 0, n - 1);
+	}
+};
 
 int N, Q;
 vector<int> h;
 vector<pair<int, int>> q;
-vector<RN> rangeTree; // range tree
-#define INF (987654321)
 
-int min(int x, int y) {
-	if (x == INF) { return y; }
-	if (y == INF) { return x; }
-	return (x < y) ? x : y;
-}
-
-int max(int x, int y) {
-	if (x == INF) { return y; }
-	if (y == INF) { return x; }
-	return (x > y) ? x : y;
-}
-
-void construct(int root, int left, int right) {
-	if (left + 1 == right) {
-		rangeTree[root].mn = h[left];
-		rangeTree[root].mx = h[left];
-		return;
-	}
-
-	// else
-	int mid = (left + right) / 2;
-	int lc = root * 2 + 1, rc = root * 2 + 2;
-	construct(lc, left, mid);
-	construct(rc, mid, right);
-
-	rangeTree[root].mn = min(rangeTree[lc].mn, rangeTree[rc].mn);
-	rangeTree[root].mx = max(rangeTree[lc].mx, rangeTree[rc].mx);
-}
-
-pair<int, int> search(int root, int left, int right, int lrange, int rrange) {
-	// cout << root << " " << left << " " << right << " " << lrange << " " << rrange << endl;
-	if ((right <= lrange) || (rrange <= left)) 
-	{
-		return pair<int, int>(INF, INF);
-	}
-	else if ((left <= lrange) && (rrange <= right)) 
-	{
-		return pair<int, int>(rangeTree[root].mn, rangeTree[root].mx);
-	}
-	else {
-		int mrange = (lrange + rrange) / 2;
-		pair<int, int> lp = search(root * 2 + 1, left, right, lrange, mrange);
-		pair<int, int> rp = search(root * 2 + 2, left, right, mrange, rrange);
-
-		int minh = min(lp.first, rp.first);
-		int maxh = max(lp.second, rp.second);
-
-		return pair<int, int>(minh, maxh);
-	}
-}
 
 vector<int> solve() {
 	vector<int> result(Q);
 
-	rangeTree.clear(); rangeTree.resize(4 * N);
-	construct(0, 0, N);
+	struct RPQ tree(h);
 
 	/* for (int i = 0; i < 4 * N; i++) {
-		cout << rangeTree[i].mn << " " << rangeTree[i].mx << endl;
+		cout << tree.rangePair[i].first << " " << tree.rangePair[i].second << endl;
 	} */
 
 	for (int i = 0; i < Q; i++) {
-		pair<int, int> p = search(0, q[i].first, q[i].second + 1, 0, N);
+		pair<int, int> p = tree.query(q[i].first, q[i].second);
 		result[i] = p.second - p.first;
 	}
 
