@@ -1,0 +1,171 @@
+#include <iostream>
+#include <vector>
+using namespace std;
+
+int N, M;
+vector<vector<int>> board;
+vector<vector<bool>> visited;
+
+const int dx[4] = {-1, 1, 0, 0};
+const int dy[4] = {0, 0, -1, 1};
+
+bool inRange(int x, int y){
+    return ((0<=x)&&(x<N))&&((0<=y)&&(y<M));
+}
+
+int DFS(int x, int y, int count){
+    int ret = 0;
+    
+    // base
+    if(count == 1){
+        return board[x][y];
+    }
+
+    // else
+    visited[x][y] = true;
+    for(int d = 0; d < 4; d++){
+        int nx = x + dx[d];
+        int ny = y + dy[d];
+
+        if(inRange(nx, ny) && (!visited[nx][ny])){
+            int result = board[x][y] + DFS(nx, ny, count-1);
+            ret = (ret > result) ? ret : result;
+        }
+    }
+
+    visited[x][y] = false;
+
+    return ret;
+}
+
+int tetro(int init, int h, int w, vector<vector<pair<int, int>>> coords){
+    int ret = init;
+    int count = init;
+    int sum = init;
+
+    // cout << count << " ";
+
+    int i = 0, j = 1;
+    for(j; j + w <= M; j++){
+        for(int c = 0; c < coords[1].size(); c++){
+            count += board[i+coords[1][c].first][j+coords[1][c].second];
+        }
+        for(int c = 0; c < coords[3].size(); c++){
+            count -= board[i+coords[3][c].first][j+coords[3][c].second];
+        }
+
+        ret = (ret > count) ? ret : count;
+        // cout << count << " ";
+    }
+
+    for(i = 1; i + h <= N; i++){
+        j = 0;
+        for(int c = 0; c < coords[0].size(); c++){
+            sum += board[i+coords[0][c].first][j+coords[0][c].second];
+        }
+        for(int c = 0; c < coords[2].size(); c++){
+            sum -= board[i+coords[2][c].first][j+coords[2][c].second];
+        }
+
+        count = sum;
+        ret = (ret > count) ? ret : count;
+        // cout << count << " ";
+
+        for(j = 1; j + w <= M; j++){
+            for(int c = 0; c < coords[1].size(); c++){
+                count += board[i+coords[1][c].first][j+coords[1][c].second];
+            }
+            for(int c = 0; c < coords[3].size(); c++){
+                count -= board[i+coords[3][c].first][j+coords[3][c].second];
+            }
+
+            ret = (ret > count) ? ret : count;
+            // cout << count << " ";
+        }
+    }
+
+    return ret;
+}
+
+int solve(){
+    // maximum value from DFS
+    int ret = 0;
+    int result;
+    visited = vector<vector<bool>>(N, vector<bool>(M, false));
+    for(int i = 0; i < N; i++){
+        for(int j = 0; j < M; j++){
+
+            result = DFS(i, j, 4);
+            ret = (ret > result) ? ret : result;
+        }
+    }
+
+    // maximum value from T block
+    int init;
+    // bottom
+    vector<vector<pair<int, int>>> coords = {
+        { pair<int, int>(0, 0), pair<int, int>(1, 1), pair<int, int>(0, 2) },
+        { pair<int, int>(1, 1), pair<int, int>(0, 2) },
+        { pair<int, int>(-1, 0), pair<int, int>(-1, 1), pair<int, int>(-1, 2) },
+        { pair<int, int>(0, -1), pair<int, int>(1, 0) }
+    };
+    init = board[0][0] + board[0][1] + board[0][2] + board[1][1];
+    result = tetro(init, 2, 3, coords);
+    ret = (ret > result) ? ret : result;
+    // cout << endl;
+
+    // top
+    coords = {
+        { pair<int, int>(1, 0), pair<int, int>(1, 1), pair<int, int>(1, 2) },
+        { pair<int, int>(1, 2), pair<int, int>(0, 1) },
+        { pair<int, int>(0, 0), pair<int, int>(0, 2), pair<int, int>(-1, 1) },
+        { pair<int, int>(0, 0), pair<int, int>(1, -1) }
+    };
+    init = board[0][1] + board[1][0] + board[1][1] + board[1][2];
+    result = tetro(init, 2, 3, coords);
+    ret = (ret > result) ? ret : result;
+    // cout << endl;
+
+    // right
+    coords = {
+        { pair<int, int>(1, 1), pair<int, int>(2, 0) },
+        { pair<int, int>(0, 0), pair<int, int>(2, 0), pair<int, int>(1, 1) },
+        { pair<int, int>(-1, 0), pair<int, int>(0, 1) },
+        { pair<int, int>(0, -1), pair<int, int>(1, -1), pair<int, int>(2, -1) }
+    };
+    init = board[0][0] + board[1][0] + board[1][1] + board[2][0];
+    result = tetro(init, 3, 2, coords);
+    ret = (ret > result) ? ret : result;
+    // cout << endl;
+
+    // left
+    coords = {
+        { pair<int, int>(1, 0), pair<int, int>(2, 1) },
+        { pair<int, int>(0, 1), pair<int, int>(1, 1), pair<int, int>(2, 1) },
+        { pair<int, int>(0, 0), pair<int, int>(-1, 1) },
+        { pair<int, int>(0, 0), pair<int, int>(2, 0), pair<int, int>(1, -1) }
+    };
+    init = board[0][1] + board[1][0] + board[1][1] + board[2][1];
+    result = tetro(init, 3, 2, coords);
+    ret = (ret > result) ? ret : result;
+    // cout << endl;
+
+    return ret;
+}
+
+int main(){
+    ios::sync_with_stdio(false);
+    
+    cin >> N >> M;
+
+    board = vector<vector<int>>(N, vector<int>(M));
+    for(int i = 0; i < N; i++){
+        for(int j = 0; j < M; j++){
+            cin >> board[i][j];
+        }
+    }
+
+    cout << solve() << endl;
+
+    return 0;
+}
