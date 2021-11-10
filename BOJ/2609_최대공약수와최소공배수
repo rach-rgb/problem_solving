@@ -1,0 +1,30 @@
+#include <iostream>
+#include <cmath>
+using namespace std;
+
+int LCD(int a, int b) {
+	if (a > b) {
+		return LCD(b, a);
+	}
+
+	for (int i = a; i >= 1; i--)
+	{
+		if (((a % i) == 0) && ((b % i) == 0))
+		{
+			return i;
+		}
+	}
+}
+
+int main() {
+	int A, B;
+	cin >> A >> B;
+
+	int lcd = LCD(A, B);
+	int lcm = lcd * (A / lcd) * (B / lcd);
+
+	cout << lcd << endl;
+	cout << lcm << endl;
+
+	return 0;
+}
