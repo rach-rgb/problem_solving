@@ -1,0 +1,55 @@
+#include <iostream>
+#include <stack>
+using namespace std;
+
+int main() {
+	int H, W;
+	cin >> H >> W;
+
+	stack<int> s;
+
+	int ret = 0;
+	int h;
+	cin >> h;
+	s.push(h);
+
+	for (int i = 1; i < W; i++) {
+		int x;
+		cin >> x;
+
+		if (s.empty()) { s.push(x); h = x; }
+		else {
+			if (x < h) { s.push(x); }
+			else {
+				while (!s.empty())
+				{
+					ret += h - s.top();
+					s.pop();
+				}
+				s.push(x);
+				h = x;
+			}
+		}
+	}
+
+	if (!s.empty())
+	{
+		h = s.top();
+		s.pop();
+		while (!s.empty())
+		{
+			int x = s.top();
+			if (x < h) {
+				ret += h - x;
+			}
+			else {
+				h = x;
+			}
+			s.pop();
+		}
+	}
+
+	cout << ret << endl;
+
+	return 0;
+}
